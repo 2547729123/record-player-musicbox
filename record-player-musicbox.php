@@ -4,13 +4,15 @@
  * Description: 仿网易邮箱的唱片音乐播放器（可自定义音乐源，移动端自动隐藏）。
  * Version: 1.2
  * Author: 码铃薯
+ * Author URI: https://www.tudoucode.cn/
  */
+
 
 if (!defined('ABSPATH')) exit;
 
 // 注册设置项
 function musicbox_register_settings() {
-    add_option('musicbox_music_url', 'https://mp3.52yzk.com/rand-music.php');//默认播放源
+    add_option('musicbox_music_url', 'https://api.uomg.com/api/rand.music?');//默认播放源
     register_setting('musicbox_options_group', 'musicbox_music_url');
 }
 add_action('admin_init', 'musicbox_register_settings');
