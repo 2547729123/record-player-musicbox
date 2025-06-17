@@ -6,13 +6,11 @@
  * Author: 码铃薯
  * Author URI: https://www.tudoucode.cn/
  */
-
-
 if (!defined('ABSPATH')) exit;
 
 // 注册设置项
 function musicbox_register_settings() {
-    add_option('musicbox_music_url', 'https://api.uomg.com/api/rand.music?');//默认播放源
+    add_option('musicbox_music_url', 'https://mp3.52yzk.com/rand-music.php');
     register_setting('musicbox_options_group', 'musicbox_music_url');
 }
 add_action('admin_init', 'musicbox_register_settings');
@@ -23,7 +21,7 @@ function musicbox_register_menu() {
 }
 add_action('admin_menu', 'musicbox_register_menu');
 
-// 后台设置页面 HTML
+// 后台设置页面
 function musicbox_settings_page() {
     ?>
     <div class="wrap">
@@ -35,7 +33,7 @@ function musicbox_settings_page() {
                     <th scope="row">音乐源地址</th>
                     <td>
                         <textarea name="musicbox_music_url" rows="5" cols="50"><?php echo esc_textarea(get_option('musicbox_music_url')); ?></textarea>
-                        <p class="description">每行一个音乐源 URL（如 <code>https://api.uomg.com/api/rand.music?或者自建api接口Github开源项目https://github.com/2547729123/MP3-API</code>）</p>
+                        <p class="description">每行一个音乐源 URL，例如：https://mp3.52yzk.com/rand-music.php 或其他自建接口</p>
                     </td>
                 </tr>
             </table>
@@ -48,115 +46,124 @@ function musicbox_settings_page() {
 // 前台输出播放器
 function musicbox_player_output() {
     $music_urls = explode("\n", get_option('musicbox_music_url'));
-    $music_urls = array_filter(array_map('trim', $music_urls)); // 去掉空行
-    $music_url = esc_url($music_urls[array_rand($music_urls)]);  // 初始随机歌曲
+    $music_urls = array_filter(array_map('trim', $music_urls));
+    $music_url = esc_url($music_urls[array_rand($music_urls)]);
 
     echo '
     <style>
-#record-player {
-    position: fixed;  /* 建议改为 fixed，避免跟页面滚动产生偏移 */
-    bottom: 0px;     /* 改为底部 10px */
-    left: 0px;       /* 改为左边 10px */
-    top: auto;        /* 取消顶部定位 */
-    right: auto;      /* 取消右边定位 */
-    z-index: 9999;
-    width: 80px;
-    height: 80px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    perspective: 600px;
-    cursor: pointer;
-    transition: left 0.5s ease, bottom 0.5s ease;
-}
-
-      #record {
-        width: 30px;
-        height: 30px;
-        background-image: url("/wp-content/plugins/record-player-musicbox/Musicbox/music2.png");
+    #record-player {
+        position: fixed;
+        bottom: -10px;
+        left: -10px;
+        width: 100px;
+        height: 100px;
+        z-index: 9999;
+        cursor: move;
+    }
+    .player-box {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background-image: url("/wp-content/plugins/record-player-musicbox/Musicbox/music1.png");
         background-size: cover;
         background-position: center;
-        border-radius: 50%;
+        user-select: none;
+    }
+    #record {
         position: absolute;
-        top: 24px;
-        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        top: 30px;
+        left: 30px;
+        background-image: url("/wp-content/plugins/record-player-musicbox/Musicbox/music2.png");
+        background-size: cover;
+        border-radius: 50%;
         box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
         z-index: 2;
-        transform-origin: center;
-        filter: hue-rotate(0deg);
-      }
-
-      #record.rotating {
+        transition: transform 0.3s ease;
+    }
+    #record.rotating {
         animation: spin 4s linear infinite, rainbowEffect 4s linear infinite, breathing 5s ease-in-out infinite;
-        box-shadow:
-          0 8px 10px rgba(255, 0, 0, 0.1),
-          0 8px 10px rgba(255, 255, 0, 0.1),
-          0 8px 10px rgba(0, 255, 0, 0.1),
-          0 8px 10px rgba(0, 255, 255, 0.1),
-          0 8px 10px rgba(255, 0, 255, 0.1);
-      }
-
-      @keyframes spin {
+    }
+    @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
-      }
-
-      @keyframes rainbowEffect {
+    }
+    @keyframes rainbowEffect {
         0% { filter: hue-rotate(0deg); }
         100% { filter: hue-rotate(360deg); }
-      }
-
-      @keyframes breathing {
+    }
+    @keyframes breathing {
         0%, 100% { transform: scale(1); }
         50% { transform: scale(1.15); }
-      }
-      @media screen and (max-width: 768px) {
+    }
+    @media screen and (max-width: 768px) {
         #record-player {
-          visibility: hidden;
-          opacity: 0;
-          pointer-events: none;
-       }
-     }
+            display: none;
+        }
+    }
     </style>
 
     <div id="record-player">
-      <div id="base"></div>
-      <div id="record" title="听听歌"></div>
+        <div class="player-box">
+            <div id="record" title="点击播放/暂停音乐"></div>
+        </div>
     </div>
 
     <audio controls id="bg-music" preload="auto" style="display: none;">
-      <source src="' . $music_url . '" type="audio/mpeg">
+        <source src="' . $music_url . '" type="audio/mpeg">
     </audio>
 
     <script>
-      const record = document.getElementById("record");
-      const music = document.getElementById("bg-music");
-      const musicUrls = ' . json_encode($music_urls) . ';
-      let isPlaying = false;
+    const record = document.getElementById("record");
+    const music = document.getElementById("bg-music");
+    const player = document.getElementById("record-player");
+    const musicUrls = ' . json_encode($music_urls) . ';
+    let isPlaying = false;
 
-      // 点击切换播放/暂停
-      record.addEventListener("click", function () {
+    // 播放控制
+    record.addEventListener("click", () => {
         if (!isPlaying) {
-          music.play();
-          record.classList.add("rotating");
+            music.play();
+            record.classList.add("rotating");
         } else {
-          music.pause();
-          record.classList.remove("rotating");
+            music.pause();
+            record.classList.remove("rotating");
         }
         isPlaying = !isPlaying;
-      });
+    });
 
-      // 播放完毕自动切换下一首
-      music.addEventListener("ended", function () {
-        let nextMusicUrl = musicUrls[Math.floor(Math.random() * musicUrls.length)];
-        music.src = nextMusicUrl;
+    // 自动下一首
+    music.addEventListener("ended", () => {
+        let next = musicUrls[Math.floor(Math.random() * musicUrls.length)];
+        music.src = next;
         music.load();
         music.play();
-      });
+    });
+
+    // 拖动支持
+    let offsetX = 0, offsetY = 0, isDragging = false;
+
+    player.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        offsetX = e.clientX - player.getBoundingClientRect().left;
+        offsetY = e.clientY - player.getBoundingClientRect().top;
+        document.body.style.userSelect = "none";
+    });
+
+    document.addEventListener("mousemove", (e) => {
+        if (isDragging) {
+            player.style.left = e.clientX - offsetX + "px";
+            player.style.top = e.clientY - offsetY + "px";
+        }
+    });
+
+    document.addEventListener("mouseup", () => {
+        isDragging = false;
+        document.body.style.userSelect = "";
+    });
     </script>
     ';
 }
-
 add_action('wp_footer', 'musicbox_player_output');
