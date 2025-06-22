@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: 唱片播放器 MusicBox
- * Description: 仿网易邮箱的唱片音乐播放器，支持自动播放、禁播、位置自定义、进度记忆开关等功能，后台支持分组标签设置。
- * Version: 1.6.3
+ * Description: 仿网易邮箱的唱片音乐播放器，支持自动播放、禁播、位置自定义、进度记忆开关等功能，后台支持分组标签设置（含手机端禁播控制开关）。
+ * Version: 1.6.4
  * Author: 码铃薯
  */
 
@@ -21,6 +21,7 @@ function musicbox_register_settings() {
         'musicbox_position_left'         => '-10',
         'musicbox_position_bottom'       => '-10',
         'musicbox_disable_progress_memory' => '0',
+        'musicbox_disable_mobile_autoplay' => '1',
     ];
     foreach ($fields as $key => $default) {
         add_option($key, $default);
@@ -74,10 +75,12 @@ function musicbox_settings_page() {
                         <td><label><input type="checkbox" name="musicbox_disable_progress_memory" value="1" <?php checked(get_option('musicbox_disable_progress_memory'), '1'); ?>> 勾选后关闭播放进度记忆功能</label></td>
                     </tr>
                     <tr>
+                        <th scope="row">禁止手机端自动播放</th>
+                        <td><label><input type="checkbox" name="musicbox_disable_mobile_autoplay" value="1" <?php checked(get_option('musicbox_disable_mobile_autoplay'), '1'); ?>> 启用</label></td>
+                    </tr>
+                    <tr>
                         <th scope="row">一键清除禁播时段</th>
-                        <td>
-                            <button type="button" id="clear-disable-time" class="button button-secondary">清除禁播</button>
-                        </td>
+                        <td><button type="button" id="clear-disable-time" class="button button-secondary">清除禁播</button></td>
                     </tr>
                 </table>
             </div>
@@ -226,8 +229,12 @@ function musicbox_player_output() {
 
             const now = Date.now();
             const disableUntil = parseInt(localStorage.getItem(disableKey)) || 0;
+            
+            function isMobileDevice() {
+            return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            }
 
-            if (enableAutoplay && isHomePage() && now > disableUntil) {
+            if (!isMobileDevice() && enableAutoplay && isHomePage() && now > disableUntil) {
                 music.muted = true;
                 music.play().then(() => {
                     music.muted = false;
