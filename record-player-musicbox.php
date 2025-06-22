@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: 唱片播放器 MusicBox 修复版
+ * Plugin Name: 唱片播放器 MusicBox
  * Description: 仿网易邮箱的唱片音乐播放器，支持自动播放、禁播、位置自定义、进度记忆开关等功能，后台支持分组标签设置。
- * Version: 1.6.2
+ * Version: 1.6.3
  * Author: 码铃薯
  */
 
@@ -195,6 +195,9 @@ function musicbox_player_output() {
     const disableProgressMemory = " . ($disable_progress_memory ? 'true' : 'false') . ";
     const enableAutoplay = " . ($autoplay ? 'true' : 'false') . ";
 
+    const tabLockKey = 'musicbox_is_active_tab';
+    const tabId = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2);
+    let isActiveTab = false;
     let isPlaying = false;
 
     function isHomePage() {
@@ -205,15 +208,42 @@ function musicbox_player_output() {
     const now = Date.now();
     const disableUntil = parseInt(localStorage.getItem(disableKey)) || 0;
 
-    if (enableAutoplay && isHomePage() && now > disableUntil && !isPlaying) {
-        music.muted = true;
-        music.play().then(() => {
-            music.muted = false;
-            record.classList.add('rotating');
-            isPlaying = true;
-            localStorage.setItem(autoplayKey, 'true');
-        }).catch(() => {});
+    function tryBecomeActiveTab() {
+        const currentActive = localStorage.getItem(tabLockKey);
+        if (!currentActive || currentActive === tabId) {
+            localStorage.setItem(tabLockKey, tabId);
+            isActiveTab = true;
+
+            if (enableAutoplay && isHomePage() && now > disableUntil) {
+                music.muted = true;
+                music.play().then(() => {
+                    music.muted = false;
+                    record.classList.add('rotating');
+                    isPlaying = true;
+                    localStorage.setItem(autoplayKey, 'true');
+                }).catch(() => {});
+            }
+        }
     }
+
+    window.addEventListener('storage', (event) => {
+        if (event.key === tabLockKey && event.newValue !== tabId) {
+            if (isActiveTab && isPlaying) {
+                music.pause();
+                record.classList.remove('rotating');
+                isPlaying = false;
+                isActiveTab = false;
+            }
+        }
+    });
+
+    window.addEventListener('beforeunload', () => {
+        if (isActiveTab) {
+            localStorage.removeItem(tabLockKey);
+        }
+    });
+
+    tryBecomeActiveTab();
 
     if (!disableProgressMemory) {
         const lastTime = parseFloat(localStorage.getItem(progressKey));
