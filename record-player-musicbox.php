@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: 唱片播放器 MusicBox 修复版
- * Description: 仿网易邮箱的唱片音乐播放器，支持自动播放、禁播、位置自定义、进度记忆等功能，后台支持分组标签设置。
- * Version: 1.5.1
+ * Description: 仿网易邮箱的唱片音乐播放器，支持自动播放、禁播、位置自定义、进度记忆开关等功能，后台支持分组标签设置。
+ * Version: 1.6.1
  * Author: 码铃薯
  */
 
@@ -11,15 +11,16 @@ if (!defined('ABSPATH')) exit;
 // 注册后台设置
 function musicbox_register_settings() {
     $fields = [
-        'musicbox_music_url'        => 'https://mp3.52yzk.com/rand-music.php',
-        'musicbox_enable_autoplay' => '1',
-        'musicbox_disable_hours'   => '48',
-        'musicbox_only_homepage'   => '0',
-        'musicbox_custom_icon'     => '/wp-content/plugins/record-player-musicbox/Musicbox/music2.png',
-        'musicbox_width'           => '100',
-        'musicbox_height'          => '100',
-        'musicbox_position_left'   => '-10',
-        'musicbox_position_bottom' => '-10',
+        'musicbox_music_url'             => 'https://mp3.52yzk.com/rand-music.php',
+        'musicbox_enable_autoplay'       => '1',
+        'musicbox_disable_hours'         => '48',
+        'musicbox_only_homepage'         => '0',
+        'musicbox_custom_icon'           => '/wp-content/plugins/record-player-musicbox/Musicbox/music2.png',
+        'musicbox_width'                 => '100',
+        'musicbox_height'                => '100',
+        'musicbox_position_left'         => '-10',
+        'musicbox_position_bottom'       => '-10',
+        'musicbox_disable_progress_memory' => '0',
     ];
     foreach ($fields as $key => $default) {
         add_option($key, $default);
@@ -28,13 +29,13 @@ function musicbox_register_settings() {
 }
 add_action('admin_init', 'musicbox_register_settings');
 
-// 菜单
+// 后台菜单
 function musicbox_register_menu() {
     add_options_page('唱片播放器设置', '唱片播放器设置', 'manage_options', 'musicbox-settings', 'musicbox_settings_page');
 }
 add_action('admin_menu', 'musicbox_register_menu');
 
-// 设置页面带标签美化
+// 后台设置页面（带标签页美化和清除禁播按钮）
 function musicbox_settings_page() {
     ?>
     <div class="wrap">
@@ -68,6 +69,17 @@ function musicbox_settings_page() {
                         <th scope="row">仅在首页显示播放器</th>
                         <td><label><input type="checkbox" name="musicbox_only_homepage" value="1" <?php checked(get_option('musicbox_only_homepage'), '1'); ?>> 启用</label></td>
                     </tr>
+                    <tr>
+                        <th scope="row">关闭播放记忆</th>
+                        <td><label><input type="checkbox" name="musicbox_disable_progress_memory" value="1" <?php checked(get_option('musicbox_disable_progress_memory'), '1'); ?>> 勾选后关闭播放进度记忆功能</label></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">一键清除禁播时段</th>
+                        <td>
+                            <button type="button" id="clear-disable-time" class="button button-secondary">清除禁播</button>
+                            <p class="description">点击按钮将清除浏览器中禁播自动播放的限制（localStorage）。</p>
+                        </td>
+                    </tr>
                 </table>
             </div>
 
@@ -99,6 +111,7 @@ function musicbox_settings_page() {
     </div>
 
     <script>
+    // 标签页切换
     document.querySelectorAll('.nav-tab').forEach(tab => {
         tab.addEventListener('click', e => {
             e.preventDefault();
@@ -108,17 +121,23 @@ function musicbox_settings_page() {
             document.getElementById(tab.dataset.tab).style.display = 'block';
         });
     });
+
+    // 清除禁播按钮点击事件
+    document.getElementById('clear-disable-time').addEventListener('click', () => {
+        const disableKey = 'musicbox_disable_autoplay_until';
+        localStorage.removeItem(disableKey);
+        alert('✅ 已清除禁播自动播放时间段，播放器将在下次打开时恢复自动播放功能（如已启用）！');
+    });
     </script>
     <?php
 }
 
-// 输出播放器（已封装为单独函数）
+// 播放器前台输出
 add_action('wp_footer', function () {
     if (get_option('musicbox_only_homepage', '0') === '1' && !(is_home() || is_front_page())) return;
     musicbox_player_output();
 });
 
-// 播放器输出函数（功能完整）
 function musicbox_player_output() {
     $urls = array_filter(array_map('trim', explode("\n", get_option('musicbox_music_url'))));
     if (!$urls) return;
@@ -131,6 +150,7 @@ function musicbox_player_output() {
     $bottom = intval(get_option('musicbox_position_bottom', -10));
     $autoplay = get_option('musicbox_enable_autoplay', '1') === '1';
     $disable_hours = intval(get_option('musicbox_disable_hours', 48));
+    $disable_progress_memory = get_option('musicbox_disable_progress_memory', '0') === '1';
 
     echo "
     <style>
@@ -142,6 +162,7 @@ function musicbox_player_output() {
         height: {$height}px;
         z-index: 9999;
         cursor: move;
+        user-select: none;
     }
     #record {
         position: absolute;
@@ -155,6 +176,7 @@ function musicbox_player_output() {
         box-shadow: 0 8px 15px rgba(0,0,0,0.3);
         cursor: pointer;
         transition: transform 0.3s ease;
+        user-select: none;
     }
     #record.rotating {
         animation: spin 4s linear infinite, rainbowEffect 4s linear infinite, breathing 5s ease-in-out infinite;
@@ -165,7 +187,7 @@ function musicbox_player_output() {
     @media screen and (max-width:768px) { #record-player { display: none; } }
     </style>
 
-    <div id='record-player'><div class='player-box'><div id='record' title='🎵 双击禁播 {$disable_hours} 小时'></div></div></div>
+    <div id='record-player'><div class='player-box'><div id='record' title='🎵 双击我，{$disable_hours}小时内不再自动播放'></div></div></div>
     <audio id='bg-music' preload='auto' style='display:none;'><source src='{$music_url}' type='audio/mpeg'></audio>
 
     <script>
@@ -175,12 +197,14 @@ function musicbox_player_output() {
     const autoplayKey = 'musicbox_is_playing';
     const disableKey = 'musicbox_disable_autoplay_until';
     const progressKey = 'musicbox_last_position';
+    const disableProgressMemory = " . ($disable_progress_memory ? 'true' : 'false') . ";
+
     let isPlaying = false;
 
     const now = Date.now();
     const disableUntil = parseInt(localStorage.getItem(disableKey)) || 0;
 
-    if ($autoplay && location.pathname === '/' && now > disableUntil && localStorage.getItem(autoplayKey) !== 'true') {
+    if ({$autoplay} && location.pathname === '/' && now > disableUntil && localStorage.getItem(autoplayKey) !== 'true') {
         music.play().then(() => {
             record.classList.add('rotating');
             isPlaying = true;
@@ -188,15 +212,19 @@ function musicbox_player_output() {
         }).catch(() => {});
     }
 
-    const lastTime = parseFloat(localStorage.getItem(progressKey));
-    if (!isNaN(lastTime)) music.currentTime = lastTime;
+    if (!disableProgressMemory) {
+        const lastTime = parseFloat(localStorage.getItem(progressKey));
+        if (!isNaN(lastTime)) music.currentTime = lastTime;
+    }
 
     record.addEventListener('click', () => {
         if (!isPlaying) {
-            music.play(); record.classList.add('rotating');
+            music.play();
+            record.classList.add('rotating');
             localStorage.setItem(autoplayKey, 'true');
         } else {
-            music.pause(); record.classList.remove('rotating');
+            music.pause();
+            record.classList.remove('rotating');
             localStorage.setItem(autoplayKey, 'false');
         }
         isPlaying = !isPlaying;
@@ -209,33 +237,41 @@ function musicbox_player_output() {
 
     music.addEventListener('ended', () => {
         const next = musicUrls[Math.floor(Math.random() * musicUrls.length)];
-        music.src = next; music.load(); music.play();
+        music.src = next;
+        music.load();
+        music.play();
     });
 
-    setInterval(() => {
-        if (!isNaN(music.currentTime)) {
-            localStorage.setItem(progressKey, music.currentTime);
-        }
-    }, 10000);
+    if (!disableProgressMemory) {
+        setInterval(() => {
+            if (!isNaN(music.currentTime)) {
+                localStorage.setItem(progressKey, music.currentTime);
+            }
+        }, 10000);
+    }
 
     // 拖动功能
     const player = document.getElementById('record-player');
     let offsetX = 0, offsetY = 0, dragging = false;
+
     player.addEventListener('mousedown', e => {
         dragging = true;
         offsetX = e.clientX - player.getBoundingClientRect().left;
         offsetY = e.clientY - player.getBoundingClientRect().top;
         document.body.style.userSelect = 'none';
     });
+
     document.addEventListener('mousemove', e => {
         if (dragging) {
             player.style.left = (e.clientX - offsetX) + 'px';
             player.style.top = (e.clientY - offsetY) + 'px';
         }
     });
+
     document.addEventListener('mouseup', () => {
         dragging = false;
         document.body.style.userSelect = '';
     });
-    </script>";
+    </script>
+    ";
 }
