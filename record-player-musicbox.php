@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: 唱片播放器 MusicBox 修复版
- * Description: 仿网易邮箱的唱片音乐播放器（可自定义音乐源，移动端自动隐藏）。
- * Version: 1.2
+ * Description: 仿网易邮箱的唱片音乐播放器（默认左下角，自定义音乐源，移动端隐藏，支持拖动，仅首页首个 tab 自动播放）。
+ * Version: 1.3.1
  * Author: 码铃薯
- * Author URI: https://www.tudoucode.cn/
  */
+
 if (!defined('ABSPATH')) exit;
 
 // 注册设置项
@@ -43,7 +43,14 @@ function musicbox_settings_page() {
     <?php
 }
 
-// 前台输出播放器
+// 仅在首页输出播放器
+add_action('wp_footer', function () {
+    if (is_front_page() || is_home()) {
+        musicbox_player_output();
+    }
+});
+
+// 播放器输出函数
 function musicbox_player_output() {
     $music_urls = explode("\n", get_option('musicbox_music_url'));
     $music_urls = array_filter(array_map('trim', $music_urls));
@@ -64,9 +71,6 @@ function musicbox_player_output() {
         position: relative;
         width: 100%;
         height: 100%;
-        background-image: url("/wp-content/plugins/record-player-musicbox/Musicbox/music1.png");
-        background-size: cover;
-        background-position: center;
         user-select: none;
     }
     #record {
@@ -121,20 +125,37 @@ function musicbox_player_output() {
     const player = document.getElementById("record-player");
     const musicUrls = ' . json_encode($music_urls) . ';
     let isPlaying = false;
+    const storageKey = "musicbox_is_playing";
 
-    // 播放控制
+    // 检查是否已有播放标志
+    const canAutoPlay = localStorage.getItem(storageKey) !== "true";
+
+    // 如果是首页且可播放，则自动播放
+    if (canAutoPlay && location.pathname === "/") {
+        music.play().then(() => {
+            record.classList.add("rotating");
+            isPlaying = true;
+            localStorage.setItem(storageKey, "true");
+        }).catch(() => {
+            // 自动播放失败（如浏览器限制），用户需点击
+        });
+    }
+
+    // 点击播放/暂停
     record.addEventListener("click", () => {
         if (!isPlaying) {
             music.play();
             record.classList.add("rotating");
+            localStorage.setItem(storageKey, "true");
         } else {
             music.pause();
             record.classList.remove("rotating");
+            localStorage.setItem(storageKey, "false");
         }
         isPlaying = !isPlaying;
     });
 
-    // 自动下一首
+    // 播放结束自动下一首
     music.addEventListener("ended", () => {
         let next = musicUrls[Math.floor(Math.random() * musicUrls.length)];
         music.src = next;
@@ -142,23 +163,27 @@ function musicbox_player_output() {
         music.play();
     });
 
-    // 拖动支持
-    let offsetX = 0, offsetY = 0, isDragging = false;
+    // 页面关闭时清除播放标志
+    window.addEventListener("beforeunload", () => {
+        if (isPlaying) {
+            localStorage.setItem(storageKey, "false");
+        }
+    });
 
+    // 拖动功能
+    let offsetX = 0, offsetY = 0, isDragging = false;
     player.addEventListener("mousedown", (e) => {
         isDragging = true;
         offsetX = e.clientX - player.getBoundingClientRect().left;
         offsetY = e.clientY - player.getBoundingClientRect().top;
         document.body.style.userSelect = "none";
     });
-
     document.addEventListener("mousemove", (e) => {
         if (isDragging) {
             player.style.left = e.clientX - offsetX + "px";
             player.style.top = e.clientY - offsetY + "px";
         }
     });
-
     document.addEventListener("mouseup", () => {
         isDragging = false;
         document.body.style.userSelect = "";
@@ -166,4 +191,3 @@ function musicbox_player_output() {
     </script>
     ';
 }
-add_action('wp_footer', 'musicbox_player_output');
