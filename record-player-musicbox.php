@@ -2,7 +2,7 @@
 /**
  * Plugin Name: 唱片播放器 MusicBox 修复版
  * Description: 仿网易邮箱的唱片音乐播放器，支持自动播放、禁播、位置自定义、进度记忆开关等功能，后台支持分组标签设置。
- * Version: 1.6.1
+ * Version: 1.6.2
  * Author: 码铃薯
  */
 
@@ -35,7 +35,7 @@ function musicbox_register_menu() {
 }
 add_action('admin_menu', 'musicbox_register_menu');
 
-// 后台设置页面（带标签页美化和清除禁播按钮）
+// 后台设置页面
 function musicbox_settings_page() {
     ?>
     <div class="wrap">
@@ -77,7 +77,6 @@ function musicbox_settings_page() {
                         <th scope="row">一键清除禁播时段</th>
                         <td>
                             <button type="button" id="clear-disable-time" class="button button-secondary">清除禁播</button>
-                            <p class="description">点击按钮将清除浏览器中禁播自动播放的限制（localStorage）。</p>
                         </td>
                     </tr>
                 </table>
@@ -111,7 +110,6 @@ function musicbox_settings_page() {
     </div>
 
     <script>
-    // 标签页切换
     document.querySelectorAll('.nav-tab').forEach(tab => {
         tab.addEventListener('click', e => {
             e.preventDefault();
@@ -122,17 +120,15 @@ function musicbox_settings_page() {
         });
     });
 
-    // 清除禁播按钮点击事件
     document.getElementById('clear-disable-time').addEventListener('click', () => {
-        const disableKey = 'musicbox_disable_autoplay_until';
-        localStorage.removeItem(disableKey);
-        alert('✅ 已清除禁播自动播放时间段，播放器将在下次打开时恢复自动播放功能（如已启用）！');
+        localStorage.removeItem('musicbox_disable_autoplay_until');
+        alert('✅ 已清除禁播限制！刷新后将可自动播放');
     });
     </script>
     <?php
 }
 
-// 播放器前台输出
+// 前台输出播放器
 add_action('wp_footer', function () {
     if (get_option('musicbox_only_homepage', '0') === '1' && !(is_home() || is_front_page())) return;
     musicbox_player_output();
@@ -176,7 +172,6 @@ function musicbox_player_output() {
         box-shadow: 0 8px 15px rgba(0,0,0,0.3);
         cursor: pointer;
         transition: transform 0.3s ease;
-        user-select: none;
     }
     #record.rotating {
         animation: spin 4s linear infinite, rainbowEffect 4s linear infinite, breathing 5s ease-in-out infinite;
@@ -198,14 +193,22 @@ function musicbox_player_output() {
     const disableKey = 'musicbox_disable_autoplay_until';
     const progressKey = 'musicbox_last_position';
     const disableProgressMemory = " . ($disable_progress_memory ? 'true' : 'false') . ";
+    const enableAutoplay = " . ($autoplay ? 'true' : 'false') . ";
 
     let isPlaying = false;
+
+    function isHomePage() {
+        const path = window.location.pathname;
+        return path === '/' || path === '/index.php';
+    }
 
     const now = Date.now();
     const disableUntil = parseInt(localStorage.getItem(disableKey)) || 0;
 
-    if ({$autoplay} && location.pathname === '/' && now > disableUntil && localStorage.getItem(autoplayKey) !== 'true') {
+    if (enableAutoplay && isHomePage() && now > disableUntil && !isPlaying) {
+        music.muted = true;
         music.play().then(() => {
+            music.muted = false;
             record.classList.add('rotating');
             isPlaying = true;
             localStorage.setItem(autoplayKey, 'true');
@@ -250,7 +253,6 @@ function musicbox_player_output() {
         }, 10000);
     }
 
-    // 拖动功能
     const player = document.getElementById('record-player');
     let offsetX = 0, offsetY = 0, dragging = false;
 
