@@ -4,7 +4,8 @@
 
 ---
 
-![2025-06-22_111430](https://github.com/user-attachments/assets/4f0df5d2-ca6d-4a8c-b6c1-1497f1652f61)
+![2025-06-22_162231](https://github.com/user-attachments/assets/b22b6310-139f-48a5-b801-27808e859c92)
+
 
 ## 插件特色功能
 
