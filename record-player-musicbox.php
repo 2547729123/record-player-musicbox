@@ -62,7 +62,7 @@ function musicbox_settings_page() {
                         <td><label><input type="checkbox" name="musicbox_enable_autoplay" value="1" <?php checked(get_option('musicbox_enable_autoplay'), '1'); ?>> 启用</label></td>
                     </tr>
                     <tr>
-                        <th scope="row">禁播时长（小时）</th>
+                        <th scope="row">禁止自动播放时长（小时）</th>
                         <td><input type="number" name="musicbox_disable_hours" value="<?php echo esc_attr(get_option('musicbox_disable_hours')); ?>" min="1"></td>
                     </tr>
                     <tr>
@@ -182,7 +182,7 @@ function musicbox_player_output() {
     @media screen and (max-width:768px) { #record-player { display: none; } }
     </style>
 
-    <div id='record-player'><div class='player-box'><div id='record' title='🎵 双击我，{$disable_hours}小时内不再自动播放'></div></div></div>
+    <div id='record-player'><div class='player-box'><div id='record'></div></div></div>
     <audio id='bg-music' preload='auto' style='display:none;'><source src='{$music_url}' type='audio/mpeg'></audio>
 
     <script>
@@ -205,14 +205,27 @@ function musicbox_player_output() {
         return path === '/' || path === '/index.php';
     }
 
-    const now = Date.now();
-    const disableUntil = parseInt(localStorage.getItem(disableKey)) || 0;
+    function updateTitle() {
+        const now = Date.now();
+        const disableUntil = parseInt(localStorage.getItem(disableKey)) || 0;
+        if (now < disableUntil) {
+            record.title = '已禁止自动播放，再次双击取消！';
+        } else {
+            record.title = '双击我，{$disable_hours}小时内不再自动播放';
+        }
+    }
+
+    // 初始化提示
+    updateTitle();
 
     function tryBecomeActiveTab() {
         const currentActive = localStorage.getItem(tabLockKey);
         if (!currentActive || currentActive === tabId) {
             localStorage.setItem(tabLockKey, tabId);
             isActiveTab = true;
+
+            const now = Date.now();
+            const disableUntil = parseInt(localStorage.getItem(disableKey)) || 0;
 
             if (enableAutoplay && isHomePage() && now > disableUntil) {
                 music.muted = true;
@@ -264,8 +277,19 @@ function musicbox_player_output() {
     });
 
     record.addEventListener('dblclick', () => {
-        localStorage.setItem(disableKey, (Date.now() + {$disable_hours} * 3600 * 1000).toString());
-        alert('🎧 播放器将在未来 {$disable_hours} 小时内不再自动播放');
+        const now = Date.now();
+        const disableUntil = parseInt(localStorage.getItem(disableKey)) || 0;
+
+        if (now < disableUntil) {
+            // 解除禁播
+            localStorage.removeItem(disableKey);
+            alert('✅ 播放器禁止自动播放已解除，刷新后将可自动播放');
+        } else {
+            // 设置禁播
+            localStorage.setItem(disableKey, (now + {$disable_hours} * 3600 * 1000).toString());
+            alert('🎧 播放器将在未来 {$disable_hours} 小时内不再自动播放');
+        }
+        updateTitle();
     });
 
     music.addEventListener('ended', () => {
