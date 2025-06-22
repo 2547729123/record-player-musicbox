@@ -1,14 +1,14 @@
 <?php
 /**
  * Plugin Name: 唱片播放器 MusicBox 修复版
- * Description: 仿网易邮箱的唱片音乐播放器（默认左下角，自定义音乐源，移动端隐藏，支持拖动，仅首页首个 tab 自动播放，支持禁播设置）。
- * Version: 1.4.0
+ * Description: 仿网易邮箱的唱片音乐播放器（默认左下角，自定义音乐源，移动端隐藏，支持拖动，双击可临时禁播，仅首页首个标签页自动播放）。
+ * Version: 1.4.1
  * Author: 码铃薯
  */
 
 if (!defined('ABSPATH')) exit;
 
-// 注册后台设置
+// 注册后台设置项
 function musicbox_register_settings() {
     add_option('musicbox_music_url', 'https://mp3.52yzk.com/rand-music.php');
     add_option('musicbox_enable_autoplay', '1');
@@ -26,7 +26,7 @@ function musicbox_register_menu() {
 }
 add_action('admin_menu', 'musicbox_register_menu');
 
-// 后台设置页面内容
+// 后台设置页面
 function musicbox_settings_page() {
     ?>
     <div class="wrap">
@@ -61,17 +61,15 @@ function musicbox_settings_page() {
     <?php
 }
 
-// 仅首页输出播放器
-add_action('wp_footer', function () {
-    if (is_front_page() || is_home()) {
-        musicbox_player_output();
-    }
-});
+// 所有页面输出播放器（自动播放仅限首页首个标签页）
+add_action('wp_footer', 'musicbox_player_output');
 
-// 播放器输出函数
+// 前端播放器输出
 function musicbox_player_output() {
     $music_urls = explode("\n", get_option('musicbox_music_url'));
     $music_urls = array_filter(array_map('trim', $music_urls));
+    if (empty($music_urls)) return;
+
     $music_url = esc_url($music_urls[array_rand($music_urls)]);
     $enable_autoplay = get_option('musicbox_enable_autoplay', '1') === '1';
     $disable_hours = intval(get_option('musicbox_disable_hours', 48));
@@ -151,12 +149,12 @@ function musicbox_player_output() {
 
     const enableAutoplay = ' . ($enable_autoplay ? 'true' : 'false') . ';
     const disableHours = ' . $disable_hours . ';
-
     const now = Date.now();
     const disableUntil = parseInt(localStorage.getItem(disableAutoplayKey)) || 0;
     const isAutoplayDisabled = now < disableUntil;
     const canAutoPlay = localStorage.getItem(autoplayKey) !== "true";
 
+    // 自动播放仅首页触发
     if (enableAutoplay && !isAutoplayDisabled && canAutoPlay && location.pathname === "/") {
         music.play().then(() => {
             record.classList.add("rotating");
@@ -165,6 +163,7 @@ function musicbox_player_output() {
         }).catch(() => {});
     }
 
+    // 点击播放/暂停
     record.addEventListener("click", () => {
         if (!isPlaying) {
             music.play();
@@ -178,12 +177,14 @@ function musicbox_player_output() {
         isPlaying = !isPlaying;
     });
 
+    // 双击禁播
     record.addEventListener("dblclick", () => {
         const future = Date.now() + disableHours * 60 * 60 * 1000;
         localStorage.setItem(disableAutoplayKey, future.toString());
         alert("🎧 好的！未来 " + disableHours + " 小时内将不会自动播放音乐~");
     });
 
+    // 自动下一首
     music.addEventListener("ended", () => {
         let next = musicUrls[Math.floor(Math.random() * musicUrls.length)];
         music.src = next;
@@ -191,12 +192,14 @@ function musicbox_player_output() {
         music.play();
     });
 
+    // 页面关闭清理
     window.addEventListener("beforeunload", () => {
         if (isPlaying) {
             localStorage.setItem(autoplayKey, "false");
         }
     });
 
+    // 拖动功能
     let offsetX = 0, offsetY = 0, isDragging = false;
     player.addEventListener("mousedown", (e) => {
         isDragging = true;
