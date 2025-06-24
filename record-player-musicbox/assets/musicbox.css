@@ -1,0 +1,36 @@
+#record-player {
+    position: fixed;
+    z-index: 9999;
+    cursor: move;
+    user-select: none;
+}
+#record {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    top: 30px;
+    left: 30px;
+    background-size: cover;
+    border-radius: 50%;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+#record.rotating {
+    animation: spin 4s linear infinite, rainbowEffect 4s linear infinite, breathing 5s ease-in-out infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0); }
+    100% { transform: rotate(360deg); }
+}
+@keyframes rainbowEffect {
+    0% { filter: hue-rotate(0); }
+    100% { filter: hue-rotate(360deg); }
+}
+@keyframes breathing {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+@media screen and (max-width: 768px) {
+    #record-player { display: none; }
+}

@@ -1,0 +1,78 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: record player musicbox 唱片播放器\n"
+"POT-Creation-Date: 2025-06-24 18:54+0800\n"
+"PO-Revision-Date: 2025-06-24 18:55+0800\n"
+"Last-Translator: \n"
+"Language-Team: tudoucode.cn\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.4.3\n"
+"X-Poedit-Basepath: ..\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Poedit-Flags-xgettext: --add-comments=translators:\n"
+"X-Poedit-WPHeader: record-player-musicbox.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;"
+"_n_noop:1,2;_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.min.js\n"
+
+#: includes/admin-menu.php:6 includes/admin-menu.php:7
+msgid "唱片播放器设置"
+msgstr "Jukebox settings"
+
+#: includes/settings-page.php:92
+msgid "查看 Pro 版详情"
+msgstr "See Pro Edition details"
+
+#: includes/settings-page.php:96
+msgid "开发者自评："
+msgstr "Developer's Self-Assessment:"
+
+#: includes/settings-page.php:97
+msgid ""
+"本插件旨在还原经典唱片机交互体验，代码结构清晰，前后端解耦良好。已考虑性能"
+"优化和基本安全规范，后续将持续维护并增强自定义能力。欢迎提出宝贵建议！"
+msgstr ""
+"This plug-in is designed to restore the interactive experience of classic "
+"record players, with a clear code structure and good front-end and back-"
+"end decoupling. Performance optimizations and basic security "
+"specifications have been considered, and the customization capabilities "
+"will be maintained and enhanced in the future. Suggestions are welcome!"
+
+#: record-player-musicbox.php:29
+msgid "设置"
+msgstr "Setting"
+
+#: record-player-musicbox.php:31
+msgid "Pro版"
+msgstr "Pro version"
+
+#. Plugin Name of the plugin/theme
+msgid "record player musicbox 唱片播放器"
+msgstr "Record Player Musicbox"
+
+#. Plugin URI of the plugin/theme
+msgid "https://github.com/2547729123/record-player-musicbox"
+msgstr "https://github.com/2547729123/record-player-musicbox"
+
+#. Description of the plugin/theme
+msgid ""
+"复古风的唱片音乐播放器，支持自动播放、禁播、位置自定义、进度记忆开关等功"
+"能，后台支持分组标签设置。"
+msgstr ""
+"A retro-style record music player that supports auto-play, ban, location "
+"customization, progress memory switch and other functions, and supports "
+"group label settings in the background."
+
+#. Author of the plugin/theme
+msgid "码铃薯"
+msgstr "Yard potatoes"
+
+#. Author URI of the plugin/theme
+msgid "https://www.tudoucode.cn"
+msgstr "https://www.tudoucode.cn"
