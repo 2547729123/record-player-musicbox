@@ -13,7 +13,7 @@ function musicbox_enqueue_assets() {
 
     wp_localize_script('musicbox-script', 'musicboxData', [
         'musicUrls' => array_filter(array_map('trim', explode("\n", get_option('musicbox_music_url')))),
-        'icon' => esc_url(get_option('musicbox_custom_icon')),
+        'icon' => esc_url(get_option('musicbox_custom_icon') ?: plugins_url('assets/img/logo.png', dirname(__FILE__))),
         'width' => intval(get_option('musicbox_width', 100)),
         'height' => intval(get_option('musicbox_height', 100)),
         'left' => intval(get_option('musicbox_position_left', -10)),

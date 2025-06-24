@@ -65,6 +65,39 @@ function musicbox_settings_page() {
                         </td>
                     </tr>
                 </table>
+            </div>
+            <div id="tab2" class="musicbox-tab" style="display: none;">
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php esc_html_e('唱盘图标 URL', 'record-player-musicbox'); ?></th>
+                        <td>
+                            <input type="text" name="musicbox_custom_icon" value="<?php echo esc_url(get_option('musicbox_custom_icon')); ?>" size="60">
+                            <p class="description">
+                                <?php esc_html_e('备注：留空将使用默认图标！或者请输入自定义图标图片的完整 URL，用于显示在前端唱盘上。建议使用 PNG 格式，支持使用媒体库中的图片地址。', 'record-player-musicbox'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('播放器尺寸（px）', 'record-player-musicbox'); ?></th>
+                        <td>
+                            <?php esc_html_e('宽：', 'record-player-musicbox'); ?><input type="number" name="musicbox_width" value="<?php echo esc_attr(get_option('musicbox_width')); ?>" style="width:80px;">
+                            　
+                            <?php esc_html_e('高：', 'record-player-musicbox'); ?><input type="number" name="musicbox_height" value="<?php echo esc_attr(get_option('musicbox_height')); ?>" style="width:80px;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('初始位置（left / bottom）', 'record-player-musicbox'); ?></th>
+                        <td>
+                            <?php esc_html_e('Left：', 'record-player-musicbox'); ?><input type="number" name="musicbox_position_left" value="<?php echo esc_attr(get_option('musicbox_position_left')); ?>" style="width:80px;">
+                            　
+                            <?php esc_html_e('Bottom：', 'record-player-musicbox'); ?><input type="number" name="musicbox_position_bottom" value="<?php echo esc_attr(get_option('musicbox_position_bottom')); ?>" style="width:80px;">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <?php submit_button(); ?>
+        </form>
+
         <hr>
         <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 30px;">
             <?php
@@ -97,35 +130,7 @@ function musicbox_settings_page() {
             <strong><?php esc_html_e('开发者自评：', 'record-player-musicbox'); ?></strong><br>
             <?php esc_html_e('本插件旨在还原经典唱片机交互体验，代码结构清晰，前后端解耦良好。已考虑性能优化和基本安全规范，后续将持续维护并增强自定义能力。欢迎提出宝贵建议！', 'record-player-musicbox'); ?>
         </div>
-            </div>
-            <div id="tab2" class="musicbox-tab" style="display: none;">
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><?php esc_html_e('唱盘图标 URL', 'record-player-musicbox'); ?></th>
-                        <td>
-                            <input type="text" name="musicbox_custom_icon" value="<?php echo esc_url(get_option('musicbox_custom_icon')); ?>" size="60">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('播放器尺寸（px）', 'record-player-musicbox'); ?></th>
-                        <td>
-                            <?php esc_html_e('宽：', 'record-player-musicbox'); ?><input type="number" name="musicbox_width" value="<?php echo esc_attr(get_option('musicbox_width')); ?>" style="width:80px;">
-                            　
-                            <?php esc_html_e('高：', 'record-player-musicbox'); ?><input type="number" name="musicbox_height" value="<?php echo esc_attr(get_option('musicbox_height')); ?>" style="width:80px;">
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e('初始位置（left / bottom）', 'record-player-musicbox'); ?></th>
-                        <td>
-                            <?php esc_html_e('Left：', 'record-player-musicbox'); ?><input type="number" name="musicbox_position_left" value="<?php echo esc_attr(get_option('musicbox_position_left')); ?>" style="width:80px;">
-                            　
-                            <?php esc_html_e('Bottom：', 'record-player-musicbox'); ?><input type="number" name="musicbox_position_bottom" value="<?php echo esc_attr(get_option('musicbox_position_bottom')); ?>" style="width:80px;">
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            <?php submit_button(); ?>
-        </form>
+
     </div>
     <script>
     document.querySelectorAll('.nav-tab').forEach(tab => {
