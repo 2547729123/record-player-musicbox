@@ -5,7 +5,6 @@
  * Description: 复古风的唱片音乐播放器，支持自动播放、禁播、位置自定义、进度记忆开关等功能，后台支持分组标签设置。
  * Version: 1.0.0
  * Author: 码铃薯
- * Author URI: https://www.tudoucode.cn
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: record-player-musicbox

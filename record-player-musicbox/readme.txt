@@ -1,5 +1,5 @@
 === record player musicbox 唱片播放器 ===
-Contributors: qq2547729123
+Contributors: qq420218831
 Tags: music, player, 唱片播放器, 播放器, 背景音乐
 Requires at least: 5.0
 Tested up to: 6.8

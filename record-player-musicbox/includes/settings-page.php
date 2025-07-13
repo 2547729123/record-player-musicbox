@@ -132,20 +132,17 @@ function musicbox_settings_page() {
         </div>
 
     </div>
-    <script>
-    document.querySelectorAll('.nav-tab').forEach(tab => {
-        tab.addEventListener('click', e => {
-            e.preventDefault();
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('nav-tab-active'));
-            document.querySelectorAll('.musicbox-tab').forEach(c => c.style.display = 'none');
-            tab.classList.add('nav-tab-active');
-            document.getElementById(tab.dataset.tab).style.display = 'block';
-        });
-    });
-    document.getElementById('clear-disable-time')?.addEventListener('click', () => {
-        localStorage.removeItem('musicbox_disable_autoplay_until');
-        alert('✅ 已清除禁播限制！刷新后将可自动播放');
-    });
-    </script>
     <?php
 }
+// 后台设置页加载 JS 脚本
+add_action('admin_enqueue_scripts', function($hook) {
+    if ($hook === 'settings_page_musicbox-settings') {
+        wp_enqueue_script(
+            'musicbox-admin-js',
+            plugin_dir_url(__DIR__) . 'assets/musicbox-admin.js',
+            array(),
+            '1.0.0',
+            true
+        );
+    }
+});
